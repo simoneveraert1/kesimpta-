@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Kesimpta">
+<meta name="theme-color" content="#f7f5f0">
+<meta name="description" content="Volg je maandelijkse Kesimpta injecties op">
+<link rel="manifest" id="manifest-placeholder">
+<title>Kesimpta Tracker</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500&display=swap');
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #f7f5f0; --surface: #ffffff; --surface2: #f0ede6;
+    --text: #1a1814; --text2: #6b6860; --text3: #a09e9a;
+    --blue: #2563a8; --blue-light: #ddeaf8; --blue-text: #1a4a8a;
+    --green: #1a7a52; --green-light: #d8f0e5; --green-text: #0f5c3c;
+    --border: rgba(26,24,20,0.1); --border2: rgba(26,24,20,0.16);
+    --radius: 16px; --radius-sm: 10px;
+  }
+  html { background: var(--bg); }
+  body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100dvh; padding: 0 0 60px; max-width: 480px; margin: 0 auto; }
+  .topbar { padding: 56px 20px 20px; background: var(--bg); position: sticky; top: 0; z-index: 10; }
+  .topbar h1 { font-family: 'DM Serif Display', serif; font-size: 26px; font-weight: 400; color: var(--text); letter-spacing: -0.3px; line-height: 1.1; }
+  .topbar p { font-size: 13px; color: var(--text2); margin-top: 4px; font-weight: 300; }
+  .content { padding: 0 16px; }
+  .install-banner { margin: 0 0 16px; padding: 14px 16px; background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius-sm); display: none; align-items: center; gap: 12px; }
+  .install-banner.visible { display: flex; }
+  .install-banner p { flex: 1; font-size: 13px; color: var(--text2); line-height: 1.4; }
+  .install-banner strong { color: var(--text); font-weight: 500; }
+  .install-btn { background: var(--text); color: var(--bg); border: none; border-radius: 8px; padding: 8px 14px; font-size: 13px; font-weight: 500; font-family: inherit; cursor: pointer; white-space: nowrap; }
+  .ios-tip { margin: 0 0 16px; padding: 14px 16px; background: var(--blue-light); border: 0.5px solid var(--blue); border-radius: var(--radius-sm); display: none; font-size: 13px; color: var(--blue-text); line-height: 1.5; }
+  .ios-tip.visible { display: block; }
+  .ios-tip strong { font-weight: 500; }
+  .ios-tip .close-tip { float: right; background: none; border: none; font-size: 16px; cursor: pointer; color: var(--blue-text); padding: 0; line-height: 1; }
+  .stats-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 16px; }
+  .stat-box { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius-sm); padding: 12px 10px; }
+  .stat-box .lbl { font-size: 10px; text-transform: uppercase; letter-spacing: 0.6px; color: var(--text3); font-weight: 500; margin-bottom: 5px; }
+  .stat-box .val { font-size: 20px; font-weight: 500; color: var(--text); line-height: 1; }
+  .stat-box .val.small { font-size: 12px; font-weight: 400; color: var(--text2); line-height: 1.4; }
+  .card { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 20px; margin-bottom: 16px; }
+  .card-title { font-size: 11px; text-transform: uppercase; letter-spacing: 0.7px; color: var(--text3); font-weight: 500; margin-bottom: 14px; }
+  .prev-box { background: var(--surface2); border-radius: var(--radius-sm); padding: 12px 14px; margin-bottom: 18px; font-size: 13px; color: var(--text2); line-height: 1.5; border: 0.5px solid var(--border); }
+  .prev-box strong { color: var(--text); font-weight: 500; }
+  .prev-box .arrow { display: inline-block; font-size: 11px; background: var(--text); color: var(--bg); border-radius: 20px; padding: 2px 8px; margin-top: 6px; font-weight: 500; }
+  .side-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+  .side-btn { border: 0.5px solid var(--border2); border-radius: var(--radius-sm); background: var(--surface); padding: 18px 12px; display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer; transition: all 0.15s; -webkit-tap-highlight-color: transparent; }
+  .side-btn:active { transform: scale(0.97); }
+  .side-btn .side-label { font-size: 14px; font-weight: 500; color: var(--text); }
+  .side-btn.sel-L { border: 2px solid var(--blue); background: var(--blue-light); }
+  .side-btn.sel-L .side-label { color: var(--blue-text); }
+  .side-btn.sel-R { border: 2px solid var(--green); background: var(--green-light); }
+  .side-btn.sel-R .side-label { color: var(--green-text); }
+  .side-btn.suggested-L { border: 2px solid var(--blue); background: var(--blue-light); }
+  .side-btn.suggested-L .side-label { color: var(--blue-text); }
+  .side-btn.suggested-L .suggest-tag { display: flex; }
+  .side-btn.suggested-R { border: 2px solid var(--green); background: var(--green-light); }
+  .side-btn.suggested-R .side-label { color: var(--green-text); }
+  .side-btn.suggested-R .suggest-tag { display: flex; }
+  .suggest-tag { display: none; font-size: 10px; font-weight: 500; letter-spacing: 0.5px; text-transform: uppercase; align-items: center; gap: 4px; }
+  .side-btn.suggested-L .suggest-tag { color: var(--blue-text); }
+  .side-btn.suggested-R .suggest-tag { color: var(--green-text); }
+  .suggest-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; animation: pulse 1.4s ease-in-out infinite; }
+  @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(0.7); } }
+  .confirm-btn { width: 100%; padding: 15px; border-radius: var(--radius-sm); border: none; background: var(--text); color: var(--bg); font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 500; cursor: pointer; transition: all 0.15s; -webkit-tap-highlight-color: transparent; }
+  .confirm-btn:active { transform: scale(0.98); }
+  .confirm-btn:disabled { opacity: 0.25; cursor: not-allowed; }
+  .hist-title { font-size: 11px; text-transform: uppercase; letter-spacing: 0.7px; color: var(--text3); font-weight: 500; margin-bottom: 10px; padding: 0 2px; }
+  .hist-item { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius-sm); padding: 14px 16px; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .hist-left { flex: 1; }
+  .hist-month { font-size: 14px; font-weight: 500; color: var(--text); margin-bottom: 2px; }
+  .hist-datetime { font-size: 12px; color: var(--text3); }
+  .badge { font-size: 11px; font-weight: 500; padding: 4px 12px; border-radius: 20px; white-space: nowrap; flex-shrink: 0; }
+  .badge-L { background: var(--blue-light); color: var(--blue-text); }
+  .badge-R { background: var(--green-light); color: var(--green-text); }
+  .del-btn { background: none; border: none; color: var(--text3); font-size: 18px; cursor: pointer; padding: 4px 8px; line-height: 1; -webkit-tap-highlight-color: transparent; }
+  .empty { text-align: center; color: var(--text3); font-size: 14px; padding: 2.5rem 0; font-weight: 300; }
+  .toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--text); color: var(--bg); font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500; padding: 10px 22px; border-radius: 30px; opacity: 0; transition: all 0.3s; pointer-events: none; white-space: nowrap; z-index: 999; }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .body-svg { width: 48px; height: 48px; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <h1>Kesimpta<br>Injectietracker</h1>
+  <p>Maandelijkse opvolging</p>
+</div>
+
+<div class="content">
+
+  <div class="install-banner" id="install-banner">
+    <p><strong>Installeer als app</strong><br>Zet op startscherm voor snelle toegang</p>
+    <button class="install-btn" id="install-btn" onclick="triggerInstall()">Installeer</button>
+  </div>
+
+  <div class="ios-tip" id="ios-tip">
+    <button class="close-tip" onclick="document.getElementById('ios-tip').classList.remove('visible');localStorage.setItem('ios-tip-dismissed','1')">×</button>
+    <strong>Installeer als app op iPhone:</strong><br>
+    Tik op het deelicoon onderaan Safari, scrol naar beneden en kies <strong>"Zet op beginscherm"</strong>. Daarna opent de app altijd volledig scherm zonder adresbalk.
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-box">
+      <div class="lbl">Injecties</div>
+      <div class="val" id="stat-total">0</div>
+    </div>
+    <div class="stat-box">
+      <div class="lbl">Laatste</div>
+      <div class="val small" id="stat-last">—</div>
+    </div>
+    <div class="stat-box">
+      <div class="lbl">Volgende</div>
+      <div class="val small" id="stat-next">—</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Nieuwe injectie</div>
+    <div class="prev-box" id="prev-box">Nog geen vorige injectie geregistreerd.</div>
+    <div class="side-row">
+      <button class="side-btn" id="btn-L" onclick="selectSide('L')">
+        <svg class="body-svg" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <ellipse cx="24" cy="10" rx="6" ry="6" fill="#d4cfc7"/>
+          <rect x="17" y="17" width="14" height="18" rx="4" fill="#d4cfc7"/>
+          <rect x="8" y="17" width="8" height="13" rx="4" fill="#2563a8" opacity="0.85"/>
+          <rect x="32" y="17" width="8" height="13" rx="4" fill="#d4cfc7"/>
+          <rect x="18" y="34" width="5" height="10" rx="3" fill="#d4cfc7"/>
+          <rect x="25" y="34" width="5" height="10" rx="3" fill="#d4cfc7"/>
+          <circle cx="12" cy="23" r="2.5" fill="#ffffff" stroke="#2563a8" stroke-width="1.5"/>
+        </svg>
+        <span class="side-label">Links</span>
+        <span class="suggest-tag"><span class="suggest-dot"></span>Aanbevolen</span>
+      </button>
+      <button class="side-btn" id="btn-R" onclick="selectSide('R')">
+        <svg class="body-svg" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <ellipse cx="24" cy="10" rx="6" ry="6" fill="#d4cfc7"/>
+          <rect x="17" y="17" width="14" height="18" rx="4" fill="#d4cfc7"/>
+          <rect x="8" y="17" width="8" height="13" rx="4" fill="#d4cfc7"/>
+          <rect x="32" y="17" width="8" height="13" rx="4" fill="#1a7a52" opacity="0.85"/>
+          <rect x="18" y="34" width="5" height="10" rx="3" fill="#d4cfc7"/>
+          <rect x="25" y="34" width="5" height="10" rx="3" fill="#d4cfc7"/>
+          <circle cx="36" cy="23" r="2.5" fill="#ffffff" stroke="#1a7a52" stroke-width="1.5"/>
+        </svg>
+        <span class="side-label">Rechts</span>
+        <span class="suggest-tag"><span class="suggest-dot"></span>Aanbevolen</span>
+      </button>
+    </div>
+    <button class="confirm-btn" id="confirm-btn" disabled onclick="saveInjection()">Injectie opslaan</button>
+  </div>
+
+  <div class="hist-title">Historiek</div>
+  <div id="hist-list"></div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  // ── PWA manifest via blob ─────────────────────────────────────────────────
+  const manifestData = {
+    name: "Kesimpta Injectietracker",
+    short_name: "Kesimpta",
+    description: "Volg je maandelijkse Kesimpta injecties op",
+    start_url: "./",
+    display: "standalone",
+    background_color: "#f7f5f0",
+    theme_color: "#f7f5f0",
+    orientation: "portrait",
+    icons: [
+      {
+        src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='32' fill='%231a1814'/%3E%3Cellipse cx='96' cy='52' rx='22' ry='22' fill='%23f7f5f0'/%3E%3Crect x='70' y='76' width='52' height='64' rx='14' fill='%23f7f5f0'/%3E%3Crect x='36' y='76' width='28' height='46' rx='14' fill='%232563a8'/%3E%3Crect x='128' y='76' width='28' height='46' rx='14' fill='%23f0ede6'/%3E%3Crect x='72' y='138' width='18' height='34' rx='10' fill='%23f7f5f0'/%3E%3Crect x='102' y='138' width='18' height='34' rx='10' fill='%23f7f5f0'/%3E%3Ccircle cx='50' cy='96' r='9' fill='%23ffffff' stroke='%232563a8' stroke-width='5'/%3E%3C/svg%3E",
+        sizes: "192x192", type: "image/svg+xml", purpose: "any maskable"
+      },
+      {
+        src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='80' fill='%231a1814'/%3E%3Cellipse cx='256' cy='136' rx='58' ry='58' fill='%23f7f5f0'/%3E%3Crect x='188' y='200' width='140' height='170' rx='36' fill='%23f7f5f0'/%3E%3Crect x='96' y='200' width='76' height='122' rx='36' fill='%232563a8'/%3E%3Crect x='340' y='200' width='76' height='122' rx='36' fill='%23f0ede6'/%3E%3Crect x='193' y='366' width='48' height='90' rx='26' fill='%23f7f5f0'/%3E%3Crect x='271' y='366' width='48' height='90' rx='26' fill='%23f7f5f0'/%3E%3Ccircle cx='134' cy='256' r='24' fill='%23ffffff' stroke='%232563a8' stroke-width='13'/%3E%3C/svg%3E",
+        sizes: "512x512", type: "image/svg+xml", purpose: "any maskable"
+      }
+    ]
+  };
+  try {
+    const blob = new Blob([JSON.stringify(manifestData)], { type: 'application/json' });
+    document.getElementById('manifest-placeholder').href = URL.createObjectURL(blob);
+  } catch(e) {}
+
+  // ── Service worker via blob ───────────────────────────────────────────────
+  const swCode = `
+    self.addEventListener('install', () => self.skipWaiting());
+    self.addEventListener('activate', e => e.waitUntil(clients.claim()));
+    self.addEventListener('fetch', e => {
+      if (e.request.method !== 'GET') return;
+      e.respondWith(fetch(e.request).catch(() => new Response('Offline')));
+    });
+  `;
+  if ('serviceWorker' in navigator) {
+    try {
+      const swBlob = new Blob([swCode], { type: 'application/javascript' });
+      navigator.serviceWorker.register(URL.createObjectURL(swBlob), { scope: './' });
+    } catch(e) {}
+  }
+
+  // ── Install prompt (Android Chrome) ──────────────────────────────────────
+  let deferredPrompt = null;
+  window.addEventListener('beforeinstallprompt', e => {
+    e.preventDefault();
+    deferredPrompt = e;
+    document.getElementById('install-banner').classList.add('visible');
+  });
+  window.addEventListener('appinstalled', () => {
+    document.getElementById('install-banner').classList.remove('visible');
+  });
+  function triggerInstall() {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    deferredPrompt.userChoice.then(() => {
+      deferredPrompt = null;
+      document.getElementById('install-banner').classList.remove('visible');
+    });
+  }
+
+  // ── iOS tip: toon eenmalig als de app nog niet geïnstalleerd is ───────────
+  const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  const isStandalone = window.navigator.standalone === true;
+  const tipDismissed = localStorage.getItem('ios-tip-dismissed');
+  if (isIOS && !isStandalone && !tipDismissed) {
+    document.getElementById('ios-tip').classList.add('visible');
+  }
+
+  // ── App logica ────────────────────────────────────────────────────────────
+  const KEY = 'kesimpta_v1';
+  let records = [];
+  let selected = null;
+
+  function load() {
+    try {
+      const raw = localStorage.getItem(KEY);
+      if (raw) records = JSON.parse(raw);
+    } catch(e) { records = []; }
+  }
+
+  function persist() {
+    localStorage.setItem(KEY, JSON.stringify(records));
+  }
+
+  function selectSide(s) {
+    selected = s;
+    const suggested = records.length > 0 ? (records[0].side === 'L' ? 'R' : 'L') : null;
+    const lClass = (suggested === 'L' ? 'suggested-L' : '') + (s === 'L' ? ' sel-L' : '');
+    const rClass = (suggested === 'R' ? 'suggested-R' : '') + (s === 'R' ? ' sel-R' : '');
+    document.getElementById('btn-L').className = ('side-btn ' + lClass).trim();
+    document.getElementById('btn-R').className = ('side-btn ' + rClass).trim();
+    document.getElementById('confirm-btn').disabled = false;
+  }
+
+  function saveInjection() {
+    if (!selected) return;
+    records.unshift({ side: selected, ts: new Date().toISOString() });
+    persist();
+    selected = null;
+    document.getElementById('confirm-btn').disabled = true;
+    showToast('Injectie opgeslagen ✓');
+    render();
+  }
+
+  function deleteRecord(i) {
+    records.splice(i, 1);
+    persist();
+    render();
+  }
+
+  function confirmDelete(i) {
+    const item = document.getElementById('hist-' + i);
+    if (!item) return;
+    item.innerHTML =
+      '<div style="flex:1;font-size:13px;color:var(--text2);">Verwijderen?</div>' +
+      '<button onclick="deleteRecord(' + i + ')" style="background:var(--text);color:var(--bg);border:none;border-radius:8px;padding:6px 14px;font-size:13px;font-family:inherit;cursor:pointer;margin-right:6px;">Ja</button>' +
+      '<button onclick="render()" style="background:none;border:0.5px solid var(--border2);border-radius:8px;padding:6px 14px;font-size:13px;font-family:inherit;cursor:pointer;color:var(--text);">Nee</button>';
+  }
+
+  function fmtDate(ts) {
+    return new Date(ts).toLocaleDateString('nl-BE', { day: '2-digit', month: 'long', year: 'numeric' });
+  }
+  function fmtTime(ts) {
+    return new Date(ts).toLocaleTimeString('nl-BE', { hour: '2-digit', minute: '2-digit' });
+  }
+  function fmtShort(ts) {
+    return new Date(ts).toLocaleDateString('nl-BE', { day: '2-digit', month: 'short' });
+  }
+  function sideLabel(s) { return s === 'L' ? 'Links' : 'Rechts'; }
+  function oppLabel(s)  { return s === 'L' ? 'Rechts' : 'Links'; }
+
+  function render() {
+    document.getElementById('stat-total').textContent = records.length;
+    if (records.length > 0) {
+      const last = records[0];
+      document.getElementById('stat-last').textContent = fmtShort(last.ts);
+      const nextDate = new Date(last.ts);
+      nextDate.setMonth(nextDate.getMonth() + 1);
+      document.getElementById('stat-next').textContent = fmtShort(nextDate.toISOString());
+      const opp = oppLabel(last.side);
+      document.getElementById('prev-box').innerHTML =
+        '<strong>' + fmtDate(last.ts) + '</strong> om ' + fmtTime(last.ts) +
+        '<br>Zijde: <strong>' + sideLabel(last.side) + '</strong>' +
+        '<br><span class="arrow">→ Volgende: ' + opp + '</span>';
+      const suggested = last.side === 'L' ? 'R' : 'L';
+      document.getElementById('btn-L').className = 'side-btn' + (suggested === 'L' ? ' suggested-L' : '');
+      document.getElementById('btn-R').className = 'side-btn' + (suggested === 'R' ? ' suggested-R' : '');
+    } else {
+      document.getElementById('stat-last').textContent = '—';
+      document.getElementById('stat-next').textContent = '—';
+      document.getElementById('prev-box').textContent = 'Nog geen vorige injectie geregistreerd.';
+      document.getElementById('btn-L').className = 'side-btn';
+      document.getElementById('btn-R').className = 'side-btn';
+    }
+    const list = document.getElementById('hist-list');
+    if (records.length === 0) {
+      list.innerHTML = '<p class="empty">Nog geen injecties geregistreerd.</p>';
+      return;
+    }
+    list.innerHTML = records.map((r, i) =>
+      '<div class="hist-item" id="hist-' + i + '">' +
+        '<div class="hist-left">' +
+          '<div class="hist-month">' + fmtDate(r.ts) + '</div>' +
+          '<div class="hist-datetime">' + fmtTime(r.ts) + '</div>' +
+        '</div>' +
+        '<span class="badge badge-' + r.side + '">' + sideLabel(r.side) + '</span>' +
+        '<button class="del-btn" onclick="confirmDelete(' + i + ')">×</button>' +
+      '</div>'
+    ).join('');
+  }
+
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2500);
+  }
+
+  load();
+  render();
+</script>
+</body>
+</html>
